@@ -94,14 +94,14 @@ func (c *customDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	}
 
 	// Create; if it fails (record exists), try update.
-	if err := c.lexicon(cfg.Provider, token,
-		"create", zone, "TXT",
+	if err := c.lexicon(token,
+		cfg.Provider,"create", zone, "TXT",
 		"--name", name,
 		"--content", ch.Key,
 		"--ttl", fmt.Sprintf("%d", ttl),
 	); err != nil {
-		if err2 := c.lexicon(cfg.Provider, token,
-			"update", zone, "TXT",
+		if err2 := c.lexicon(token,
+			cfg.Provider, "update", zone, "TXT",
 			"--name", name,
 			"--content", ch.Key,
 			"--ttl", fmt.Sprintf("%d", ttl),
@@ -200,20 +200,20 @@ func sanitizeLexiconArgs(args []string) []string {
 	return out
 }
 
-func (c *customDNSProviderSolver) lexicon(provider, token string, args ...string) error {
+func (c *customDNSProviderSolver) lexicon(token string, args ...string) error {
 	// lexicon_cmd: <provider> <action> <zone> TXT --name ... --content ... --ttl ...
 
-	cmd := exec.Command(provider, args...)
+	cmd := exec.Command("lexicon", args...)
 	cmd.Env = append(os.Environ(), "LEXICON_LOG_LEVEL=warning")
 
 	// token-only (hetzner + desec typically)
 	cmd.Args = append(cmd.Args, "--auth-token", token)
 
 	fmt.Printf(
-		"-->>>>>>>>>>>>>> [LEXICON] provider=%s action=%s zone=%s args=%v\n",
-		cmd.Args[0], // provider
-		cmd.Args[1], // create / update / delete
-		cmd.Args[2], // zone
+		"----> [Call LEXICON] provider=%s action=%s zone=%s args=%v\n",
+		cmd.Args[1], // provider
+		cmd.Args[2], // create / update / delete
+		cmd.Args[3], // zone
 		sanitizeLexiconArgs(cmd.Args),
 	)
 

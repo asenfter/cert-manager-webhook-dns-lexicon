@@ -16,7 +16,7 @@ certManager:
 
 image:
   repository: docker.senfter.net/cert-manager-webhook-dns-lexicon
-  tag: 1.0.10
+  tag: 1.0.11
   pullPolicy: IfNotPresent
 
 nameOverride: ""
