@@ -4,9 +4,18 @@
 *.dll
 *.so
 *.dylib
-
+.idea
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Ignore the built binary
+./cert-manager-webhook-dns-lexicon
+
+# Make artifacts
+_out
+_test
+.kube
+.env

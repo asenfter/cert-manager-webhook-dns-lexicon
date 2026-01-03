@@ -1,0 +1,9 @@
+{
+  "provider": "desec",
+  "zoneName": "senfter.net",
+  "ttl": 60,
+  "authTokenSecretRef": {
+    "name": "lexicon-credentials-desec",
+    "key": "token"
+  }
+}

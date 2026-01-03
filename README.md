@@ -1,4 +1,4 @@
-# ACME webhook example
+# ACME webhook for dns-lexicon
 
 The ACME issuer type supports an optional 'webhook' solver, which can be used
 to implement custom DNS01 challenge solving logic.
@@ -18,7 +18,7 @@ users to quickly iterate and test out new integrations, and then packaging
 those up themselves as 'extensions' to cert-manager.
 
 We can also then provide a standardised 'testing framework', or set of
-conformance tests, which allow us to validate the a DNS provider works as
+conformance tests, which allow us to validate that a DNS provider works as
 expected.
 
 ## Creating your own webhook
@@ -32,6 +32,11 @@ webhook to complete ACME challenge validations and obtain certificates.
 To make the set up of these webhook's easier, we provide a template repository
 that can be used to get started quickly.
 
+When implementing your webhook, you should set the `groupName` in the
+[values.yml](deploy/cert-manager-webhook-dns-lexicon/values.yaml) of your chart to a domain name that 
+you - as the webhook-author - own. It should not need to be adjusted by the users of
+your chart.
+
 ### Creating your own repository
 
 ### Running the test suite
@@ -42,12 +47,12 @@ else they will have undetermined behaviour when used with cert-manager.
 **It is essential that you configure and run the test suite when creating a
 DNS01 webhook.**
 
-An example Go test file has been provided in [main_test.go]().
+An example Go test file has been provided in [main_test.go](https://github.com/cert-manager/webhook-example/blob/master/main_test.go).
 
 You can run the test suite with:
 
 ```bash
-$ TEST_ZONE_NAME=example.com go test .
+$ TEST_ZONE_NAME=example.com. make test
 ```
 
 The example file has a number of areas you must fill in and replace with your
