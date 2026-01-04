@@ -1,0 +1,9 @@
+{
+  "provider": "hetzner",
+  "zoneName": "senfter.net.",
+  "ttl": 60,
+  "authTokenSecretRef": {
+    "name": "lexicon-credentials-hetzner",
+    "key": "token"
+  }
+}

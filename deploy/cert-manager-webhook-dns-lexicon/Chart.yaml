@@ -1,0 +1,14 @@
+apiVersion: v1
+name: cert-manager-webhook-dns-lexicon
+version: 0.11.0
+appVersion: "0.11.0"
+kubeVersion: ">= 1.22.0-0"
+description: Allow cert-manager to solve DNS challenges using dns-lexicon
+home: https://github.com/asenfter/cert-manager-webhook-dns-lexicon
+keywords:
+  - cert-manager
+  - dns-lexicon
+  - webhook
+  - letsencrypt
+sources:
+  - https://github.com/asenfter/cert-manager-webhook-dns-lexicon
