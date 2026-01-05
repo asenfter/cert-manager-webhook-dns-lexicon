@@ -93,22 +93,38 @@ func (c *customDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		ttl = 60
 	}
 
-	// Create; if it fails (record exists), try update.
-	if err := c.lexicon(token,
-		cfg.Provider,"create", zone, "TXT",
-		"--name", name,
-		"--content", ch.Key,
-		"--ttl", fmt.Sprintf("%d", ttl),
-	); err != nil {
-		if err2 := c.lexicon(token,
+	// Optional: list existing records first so we know whether to create or update.
+	action := "create"
+	if recs, err := c.lexiconList(token, cfg.Provider, zone, "TXT", name); err != nil {
+		fmt.Printf("----> [LEXICON list] warning: %v\n", err)
+	} else if len(recs) == 0 {
+		fmt.Printf("----> [LEXICON list] no existing TXT records for name=%s zone=%s\n", name, zone)
+	} else {
+		fmt.Printf("----> [LEXICON list] found %d TXT record(s) for name=%s zone=%s\n", len(recs), name, zone)
+		action = "update"
+	}
+
+	switch action {
+	case "create":
+		if err := c.lexicon(token,
+			cfg.Provider, "create", zone, "TXT",
+			"--name", name,
+			"--content", ch.Key,
+			"--ttl", fmt.Sprintf("%d", ttl),
+		); err != nil {
+			return fmt.Errorf("lexicon create failed: %w", err)
+		}
+	case "update":
+		if err := c.lexicon(token,
 			cfg.Provider, "update", zone, "TXT",
 			"--name", name,
 			"--content", ch.Key,
 			"--ttl", fmt.Sprintf("%d", ttl),
-		); err2 != nil {
-			return fmt.Errorf("lexicon create failed: %v; lexicon update failed: %v", err, err2)
+		); err != nil {
+			return fmt.Errorf("lexicon update failed: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -198,6 +214,47 @@ func sanitizeLexiconArgs(args []string) []string {
 		}
 	}
 	return out
+}
+
+type lexiconRecord struct {
+	Type    string `json:"type"`
+	TTL     int    `json:"ttl"`
+	Name    string `json:"name"`
+	ID      string `json:"id"`
+	Content string `json:"content"`
+}
+
+// lexiconList runs `lexicon <provider> list <zone> <recordType> --name <name> --output JSON`
+// and returns the parsed records. It is primarily intended for debugging/inspection.
+func (c *customDNSProviderSolver) lexiconList(token, provider, zone, recordType, name string) ([]lexiconRecord, error) {
+	args := []string{provider, "list", zone, recordType}
+	if name != "" {
+		args = append(args, "--name", name)
+	}
+	args = append(args, "--output", "JSON")
+
+	cmd := exec.Command("lexicon", args...)
+	cmd.Env = append(os.Environ(), "LEXICON_LOG_LEVEL=warning")
+	cmd.Args = append(cmd.Args, "--auth-token", token)
+
+	fmt.Printf(
+		"----> [Call LEXICON list] provider=%s action=%s zone=%s args=%v\n",
+		cmd.Args[1], // provider
+		cmd.Args[2], // list
+		cmd.Args[3], // zone
+		sanitizeLexiconArgs(cmd.Args),
+	)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("lexicon list failed: %w; output=%s", err, string(out))
+	}
+
+	var recs []lexiconRecord
+	if err := json.Unmarshal(out, &recs); err != nil {
+		return nil, fmt.Errorf("failed to parse lexicon list JSON: %w; output=%s", err, string(out))
+	}
+	return recs, nil
 }
 
 func (c *customDNSProviderSolver) lexicon(token string, args ...string) error {
